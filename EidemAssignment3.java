@@ -102,7 +102,7 @@ class EidemAssignment3 {
                 if (iData != null && iData.tickerList.size() > 2) {
                     System.out.printf("%d accepted tickers for %s(%s - %s), %d common dates%n", iData.tickerList.size(),
                             industry, iData.startDate, iData.endDate, iData.commonDays);
-                    // processIndustryGains(industry, iData);
+                    processIndustryGains(industry, iData);
                 } else {
                     System.out.printf("Insufficient data for %s => no analysis%n", industry);
                 }
@@ -248,36 +248,25 @@ class EidemAssignment3 {
         // To Do: Execute the appropriate SQL queries (you need two of them) and return
         // an object of IndustryData
 
-
-
-        int minDataDays = 150; //per write-up
+        int minDataDays = 150; // per write-up
         String minDataDay = "150";
 
-
-        Statement stmt = readerConn.createStatement();
-
-
-        //this gets the min and max date that I need
+        // this gets the min and max date that I need
         String getDatesQuery = "select max(startDate), min(endDate)"
                 + "  from (select Ticker, min(TransDate) as StartDate, max(TransDate) as endDate,"
                 + "            count(distinct TransDate) as tradingDays"
                 + "          from company natural join pricevolume" + "          where Industry = ?"
                 + "          group by Ticker" + "          having tradingDays >= ?) as TickerDates";
 
-        PreparedStatement getDates = readerConn.prepareStatement(getDatesQuery);        
+        PreparedStatement getDates = readerConn.prepareStatement(getDatesQuery);
 
-
-
-
-
-        //this uses the dates that were found 
+        // this uses the dates that were found
         String getTickerDatesQuery = "select Ticker, min(TransDate) as StartDate, max(TransDate) as endDate,"
                 + "      count(distinct TransDate) as tradingDays" + "  from company natural join pricevolume"
                 + "  where Industry = ?" + "    and TransDate >= ? and TransDate <= ?" + "  group by Ticker"
                 + "  having tradingDays >= ?" + "  order by Ticker";
 
         PreparedStatement getTickerDates = readerConn.prepareStatement(getTickerDatesQuery);
-        
 
         getDates.setString(1, industry);
         getDates.setInt(2, minDataDays);
@@ -309,6 +298,7 @@ class EidemAssignment3 {
             if (tickerDays < numDays) {
                 numDays = tickerDays;
             }
+            tickers.add(ticker);
         }
         rs.close();
 
@@ -324,36 +314,63 @@ class EidemAssignment3 {
         // created earlier. You may use the following way to do that for each company
         // (or ticker) of an indsutry:
 
-        Statement stmt = readerConn.createStatement();
+        int intervalDays = 60;
 
-        String indus = industry;
-        List<String> ticker = data.getTicker();
-        String startDate = data.getStartDate();
-        String endDate = data.getEndDate();
-
-        for (int i = 0; i < ticker.size(); i++) {
-            String currentTicker = ticker.get(i);
-
-            // for current ticker
-            ResultSet currentTickerQuery = stmt.executeQuery("select P.TransDate, P.openPrice, P.closePrice "
-                    + "from pricevolume P " + "where Ticker = '" + currentTicker + "' and TransDate >= '" + startDate
-                    + "' " + "and TransDate <= '" + endDate + "' ");
-
-            // for rest of tickers
-
-            ResultSet allTickerQuery = stmt.executeQuery(
-                    "select P.TransDate, P.openPrice, P.closePrice " + "from pricevolume P natural join company "
-                            + "where Industry = '" + industry + "' " + "and TransDate >= '" + startDate
-                            + "' and TransDate <= '" + endDate + "' " + "order by TransDate, Ticker");
-
+        int numTickers = data.tickerList.size();
+        Map<String, Integer> tickerIndex = new HashMap<>();
+        {
+            int index = 0;
+            for (String ticker : data.tickerList) {
+                tickerIndex.put(ticker, index);
+                index++;
+            }
         }
+        int numIntervals = data.commonDays / intervalDays;
 
+        String getIndustryPriceDataQuery = "select Ticker, TransDate, OpenPrice, ClosePrice"
+                + "  from pricevolume natural join company" + "  where Industry = ?"
+                + "    and TransDate >= ? and TransDate <= ?" + "  order by TransDate, Ticker";
+
+        PreparedStatement getIndustryPriceData = readerConn.prepareStatement(getIndustryPriceDataQuery);
+
+        getIndustryPriceData.setString(1, industry);
+        getIndustryPriceData.setString(2, data.startDate);
+        getIndustryPriceData.setString(3, data.endDate);
+
+
+        //TODO:
+        //Must account for splits before continuing 
+
+
+
+
+
+
+
+
+
+        //TODO:
+        //Ticker Return math
         /*
-         * Trading intervals A stock will be considered for comparison if it has at
-         * least 150 days of data
-         * 
-         * 
-         */
+            Ticker return = [(closePrice * (D/openPrice)) -D] / D
+            Ticker return = (closePrice/OpenPrice) - 1
+        */
+
+            double ticker
+
+
+
+
+
+
+
+
+
+
+
+
+        //TODO:
+        //Industry return 
 
         // insertPerformanceData.setString(1, industry);
         // insertPerformanceData.setString(2, ticker);
@@ -363,4 +380,59 @@ class EidemAssignment3 {
         // insertPerformanceData.setString(6, String.format("%10.7f", industryReturn);
         // int result = insertPerformanceData.executeUpdate();
     }
+
+    // static void processIndustryGains(String industry, IndustryData data) throws
+    // SQLException {
+    // // To Do:
+    // // In this method, you should calculate the ticker return and industry
+    // return.
+    // // Look at the assignment description to know how to do that
+    // // Don't forget to do the split adjustment
+    // // After those calculations, insert the data into the Performance table you
+    // // created earlier. You may use the following way to do that for each company
+    // // (or ticker) of an indsutry:
+
+    // Statement stmt = readerConn.createStatement();
+
+    // String indus = industry;
+    // List<String> ticker = data.getTicker();
+    // String startDate = data.getStartDate();
+    // String endDate = data.getEndDate();
+
+    // for (int i = 0; i < ticker.size(); i++) {
+    // String currentTicker = ticker.get(i);
+
+    // // for current ticker
+    // ResultSet currentTickerQuery = stmt.executeQuery("select P.TransDate,
+    // P.openPrice, P.closePrice "
+    // + "from pricevolume P " + "where Ticker = '" + currentTicker + "' and
+    // TransDate >= '" + startDate
+    // + "' " + "and TransDate <= '" + endDate + "' ");
+
+    // // for rest of tickers
+
+    // ResultSet allTickerQuery = stmt.executeQuery(
+    // "select P.TransDate, P.openPrice, P.closePrice " + "from pricevolume P
+    // natural join company "
+    // + "where Industry = '" + industry + "' " + "and TransDate >= '" + startDate
+    // + "' and TransDate <= '" + endDate + "' " + "order by TransDate, Ticker");
+
+    // }
+
+    // /*
+    // * Trading intervals A stock will be considered for comparison if it has at
+    // * least 150 days of data
+    // *
+    // *
+    // */
+
+    // // insertPerformanceData.setString(1, industry);
+    // // insertPerformanceData.setString(2, ticker);
+    // // insertPerformanceData.setString(3, startdate);
+    // // insertPerformanceData.setString(4, enddate);
+    // // insertPerformanceData.setString(5, String.format("%10.7f", tickerReturn);
+    // // insertPerformanceData.setString(6, String.format("%10.7f",
+    // industryReturn);
+    // // int result = insertPerformanceData.executeUpdate();
+    // }
 }
