@@ -337,6 +337,28 @@ class EidemAssignment3 {
         getIndustryPriceData.setString(2, data.startDate);
         getIndustryPriceData.setString(3, data.endDate);
 
+        ResultSet rs = getIndustryPriceData.executeQuery();
+
+
+
+        String tickerQuery = "-1";
+        String transDateQuery = "-1";
+        String openPriceQuery = "-1";
+        String closePriceQuery = "-1";
+
+        while(rs.next()){
+            tickerQuery = rs.getString("Ticker");
+            transDateQuery = rs.getString("TransDate");
+            openPriceQuery = rs.getString("OpenPrice");
+            closePriceQuery = rs.getString("ClosePrice");
+
+
+
+
+            System.out.println(tickerQuery + " \t" + transDateQuery + "\t" + openPriceQuery + " - " + closePriceQuery);
+        }
+
+
 
         //TODO
         //Must account for splits before continuing 
@@ -372,6 +394,14 @@ class EidemAssignment3 {
         //TODO:
         //Industry return 
 
+
+
+
+
+
+
+
+
         // insertPerformanceData.setString(1, industry);
         // insertPerformanceData.setString(2, ticker);
         // insertPerformanceData.setString(3, startdate);
@@ -381,58 +411,10 @@ class EidemAssignment3 {
         // int result = insertPerformanceData.executeUpdate();
     }
 
-    // static void processIndustryGains(String industry, IndustryData data) throws
-    // SQLException {
-    // // To Do:
-    // // In this method, you should calculate the ticker return and industry
-    // return.
-    // // Look at the assignment description to know how to do that
-    // // Don't forget to do the split adjustment
-    // // After those calculations, insert the data into the Performance table you
-    // // created earlier. You may use the following way to do that for each company
-    // // (or ticker) of an indsutry:
 
-    // Statement stmt = readerConn.createStatement();
 
-    // String indus = industry;
-    // List<String> ticker = data.getTicker();
-    // String startDate = data.getStartDate();
-    // String endDate = data.getEndDate();
 
-    // for (int i = 0; i < ticker.size(); i++) {
-    // String currentTicker = ticker.get(i);
 
-    // // for current ticker
-    // ResultSet currentTickerQuery = stmt.executeQuery("select P.TransDate,
-    // P.openPrice, P.closePrice "
-    // + "from pricevolume P " + "where Ticker = '" + currentTicker + "' and
-    // TransDate >= '" + startDate
-    // + "' " + "and TransDate <= '" + endDate + "' ");
 
-    // // for rest of tickers
 
-    // ResultSet allTickerQuery = stmt.executeQuery(
-    // "select P.TransDate, P.openPrice, P.closePrice " + "from pricevolume P
-    // natural join company "
-    // + "where Industry = '" + industry + "' " + "and TransDate >= '" + startDate
-    // + "' and TransDate <= '" + endDate + "' " + "order by TransDate, Ticker");
-
-    // }
-
-    // /*
-    // * Trading intervals A stock will be considered for comparison if it has at
-    // * least 150 days of data
-    // *
-    // *
-    // */
-
-    // // insertPerformanceData.setString(1, industry);
-    // // insertPerformanceData.setString(2, ticker);
-    // // insertPerformanceData.setString(3, startdate);
-    // // insertPerformanceData.setString(4, enddate);
-    // // insertPerformanceData.setString(5, String.format("%10.7f", tickerReturn);
-    // // insertPerformanceData.setString(6, String.format("%10.7f",
-    // industryReturn);
-    // // int result = insertPerformanceData.executeUpdate();
-    // }
 }
