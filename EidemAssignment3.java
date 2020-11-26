@@ -338,11 +338,11 @@ class EidemAssignment3 {
         getIndustryPriceData.setString(3, data.endDate);
 
 
-        //TODO:
+        //TODO
         //Must account for splits before continuing 
 
 
-
+            //maybe make an arrraylost
 
 
 
@@ -356,7 +356,7 @@ class EidemAssignment3 {
             Ticker return = (closePrice/OpenPrice) - 1
         */
 
-            double ticker
+            //double ticker 
 
 
 
