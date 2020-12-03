@@ -497,23 +497,56 @@ class EidemAssignment3 {
 
 
 
-            // ArrayList<TickerList> stockList = industryList.getTickersList();
+            ArrayList<TickerList> stocksList = industryList.getTickersList();
 
-            // for (int i = 0; i < stocksList.size(); i++) {
-            //     ArrayList<StockData> stocksClass = stocksList.get(i).getTickerList();
-
-
+            for (int i = 0; i < stocksList.size(); i++) {
+                ArrayList<StockData> stocksClass = stocksList.get(i).getTickerList();
 
 
+                //need to go though the current ticker and get the date bounds for each interval
+                //      also need to get the start and end prices for that interval 
+
+                int intervalStart = 0;
+                int intervalEnd = intervalStart + 60;
+
+                String StartDate;
+                String EndDate;
+
+                Double TickerReturn;
+                Double IndustryReturn;
 
 
-            //     for (int j = 0; j < stocksClass.size(); j++) {
-            //         StockData stock = stocksClasss.get(j);
-            //         System.out.println(industry + "\t" + stock.getTicker() + " \t" + stock.getDate() + "\t"
-            //                 + stock.getOpenPrice() + " - " + stock.getClosePrice());
 
-            //     }
-            // }
+                //Dont need forloops to go though the whole ticker set, just need the start and end ticker
+
+                for (int j = intervalStart; j < intervalEnd; j++) {
+                    StockData stock = stocksClass.get(j);
+                    
+
+                }
+
+                //ned to go though the rest if the tickers and get the same data 
+                for (int j = 0; j < stocksList.size(); j++) {
+                    ArrayList<StockData> stocksClassExclusive = stocksList.get(j).getTickerList();
+                    while(j != i){ //Filter out current stock with rest of stocks 
+
+
+                        // Dont need forloops to go though the whole ticker set, just need the start and
+                        // end ticker
+                        for (int k = intervalStart; k < intervalEnd; k++) {
+                            StockData stock = stocksClassExclusive.get(k);
+
+
+
+    
+                        }
+
+                    }
+
+                    // ned to go though the rest if the tickers and get the same data
+
+                }
+            }
 
 
 
