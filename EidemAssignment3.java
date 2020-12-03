@@ -12,6 +12,9 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 import java.util.*;
+
+//import jdk.javadoc.internal.doclets.toolkit.resources.doclets;
+
 import java.io.*;
 
 class EidemAssignment3 {
@@ -53,8 +56,14 @@ class EidemAssignment3 {
         // days, start date, and end date
 
         List<String> tickerList;
+        String industry;
         String startDate, endDate;
         int commonDays;
+
+
+        ArrayList<TickerList> stocksList; 
+
+  
 
         IndustryData(List<String> tickerList, String startDay, String endDay, int commonDays) {
             this.tickerList = tickerList;
@@ -63,17 +72,160 @@ class EidemAssignment3 {
             this.commonDays = commonDays;
         }
 
-        public List<String> getTicker() {
+        
+        IndustryData(String Industry, ArrayList<TickerList> Stocks){
+            industry = Industry;
+            stocksList = Stocks;
+        }
+
+        public ArrayList<TickerList> getTickersList(){
+            return stocksList;
+        }
+        
+        public void acountSplits(){
+            for (int i = 0; i < stocksList.size(); i++) {
+                ArrayList<StockData> stocks = stocksList.get(i).getTickerList();
+
+
+                double scaleFactor = 1;
+                double prevOpenPrice = -1;
+                int splitCount = 0;
+                int tradingDays = 0;
+                int scaleCount1 = 0; // 2:1
+                int scaleCount2 = 0; // 3:1
+                int scaleCount3 = 0; // 3:2
+
+
+                ArrayList<StockData> result = new ArrayList<StockData>();
+                for (int j = 0; j < stocks.size(); j++) {
+                    StockData stock = stocks.get(j);
+                    
+                    
+                    //process data for individual ticker
+                    String ticker = stock.getTicker();
+                    String transDate = stock.getDate();
+                    double openPrice = stock.getOpenPrice();
+                    double closePrice = stock.closePrice;
+                    
+                    
+                    if (tradingDays == 0) {
+                        prevOpenPrice = openPrice;
+                        System.out.println(stock.getTicker());
+
+                    }
+
+                    double todaysRatio = closePrice / prevOpenPrice;
+
+                    double adjustedPrice = -1;
+
+                    if (Math.abs(todaysRatio - 2.0) < 0.2) {
+                        scaleCount1++; // 2:1 split
+                        splitCount++;
+                        adjustedPrice = closePrice / 2;
+                        System.out.println("2:1 split on " + transDate + "\t" + closePrice + "-->" + adjustedPrice);
+
+                    } else if (Math.abs(todaysRatio - 3.0) < 0.3) { // 3:1 split
+                        scaleCount2++;
+                        splitCount++;
+                        adjustedPrice = closePrice / 3;
+                        System.out.println("3:1 split on " + transDate + "\t" + closePrice + "-->" + adjustedPrice);
+
+                    } else if (Math.abs(todaysRatio - 1.5) < 0.15) { // 3:2 split
+                        scaleCount3++;
+                        splitCount++;
+                        adjustedPrice = closePrice / 1.5;
+
+                        System.out.println("3:2 split on " + transDate + "\t" + closePrice + "-->" + adjustedPrice);
+                    }
+
+                    // This will set the numbers going to the deQue to the com compounding ratio
+                    scaleFactor = ((1 / (Math.pow(2, scaleCount1))) * (1 / (Math.pow(3, scaleCount2)))
+                            * (1 / (Math.pow(1.5, scaleCount3))));
+                    openPrice *= scaleFactor;
+                    closePrice *= scaleFactor;
+
+                    // Insert to the result
+                    StockData s = new StockData(ticker, transDate, openPrice, closePrice);
+                    result.add(s);
+
+                    // Next Trading Day
+                    prevOpenPrice = openPrice;
+                    tradingDays++;
+
+
+                }
+
+                //Replace the return stock array with the one stored in stock list
+                stocksList.get(i).replaceList(result);
+
+                //System.out.println(splitCount + " splits in " + tradingDays + " trading days");
+            }
+
+        }
+
+        public void printIndustryData(){
+            for(int i = 0; i < stocksList.size(); i++){
+                ArrayList<StockData> stocks = stocksList.get(i).getTickerList();
+                for(int j = 0; j < stocks.size(); j++){
+                    StockData stock = stocks.get(j);
+                    System.out.println(industry + "\t" + stock.getTicker() + " \t" + stock.getDate() + "\t" + stock.getOpenPrice()
+                            + " - " + stock.getClosePrice());
+                    
+                }
+            }
+        }
+    }
+
+
+    public static class TickerList{
+        ArrayList<StockData> tickerList;
+
+        TickerList(){
+            tickerList = new ArrayList<StockData>();
+        }
+
+        public void addStockData(StockData stock){
+            tickerList.add(stock);
+        }
+
+        public ArrayList<StockData> getTickerList(){
             return tickerList;
         }
 
-        public String getStartDate() {
-            return startDate;
+        public void replaceList(ArrayList<StockData> result){
+            tickerList = result;
+        }
+    }
+
+    public static class StockData {
+        String ticker;
+        String date;
+        double openPrice;
+        double closePrice;
+
+        StockData(String Ticker, String Date, double OpenPrice, double ClosePrice){
+            ticker = Ticker;
+            date = Date;
+            openPrice = OpenPrice;
+            closePrice = ClosePrice;
         }
 
-        public String getEndDate() {
-            return endDate;
+        public String getTicker(){
+            return ticker;
         }
+
+        public String getDate(){
+            return date;
+        }
+
+        public Double getOpenPrice(){
+            return openPrice;
+        }
+
+        public Double getClosePrice(){
+            return closePrice;
+        }
+
     }
 
     public static void main(String[] args) throws Exception {
@@ -83,7 +235,6 @@ class EidemAssignment3 {
         readerProps.load(new FileInputStream(defaultReaderParams));
         // Properties writerProps = new Properties();
         // writerProps.load(new FileInputStream(defaultWriterParams));
-
         try {
             // Setup Reader and Writer Connection
             setupReader(readerProps);
@@ -161,88 +312,11 @@ class EidemAssignment3 {
         return result;
     }
 
-    // static IndustryData processIndustry(String industry) throws SQLException {
-    // // To Do: Execute the appropriate SQL queries (you need two of them) and
-    // return
-    // // an object of IndustryData
+ 
 
-    // int numDays = -1;
-    // String startDate = "-1";
-    // String endDate = "-1";
-    // List<String> tickers = new ArrayList<>();
 
-    // Statement stmt = readerConn.createStatement();
-    // // ResultSet tickersResult = stmt.executeQuery("select Ticker from company
-    // where Industry = '" + industry + "'");
 
-    // // while (tickersResult.next()) {
-    // // String ticker = tickersResult.getString("Ticker");
-    // // //System.out.println(ticker);
-    // // tickers.add(ticker);
-    // // }
 
-    // // TODO:
-
-    // // Need to get the max start date and the min end date!
-    // // Should I go though that with using SQL or would it be easiser to go about
-    // it
-    // // with java code
-
-    // // all the common days will not have null for any company
-
-    // // ResultSet startDateResult = stmt.executeQuery("select Transdate from
-    // company
-    // // where Industry = '" + industry + "'");
-
-    // ResultSet startDateResult = stmt.executeQuery(
-    // "select max(startDate), min(endDate)"
-    // + " from (select Ticker, min(TransDate) as StartDate, max(TransDate) as
-    // endDate,"
-    // + " count(distinct TransDate) as tradingDays"
-    // + " from company natural join pricevolume" + " where Industry = '" + industry
-    // + "' "
-    // + " group by Ticker" + " having tradingDays >= StartDate) as TickerDates");
-
-    // // System.out.println();
-
-    // while (startDateResult.next()) {
-    // startDate = startDateResult.getString("max(startDate)");
-    // endDate = startDateResult.getString("min(endDate)");
-    // }
-
-    // // this query will get the min and max data of the common days and return the
-    // count
-    // ResultSet getTickerDatesQuery = stmt.executeQuery("select Ticker,
-    // min(TransDate) as StartDate, max(TransDate) as endDate,"
-    // + " count(distinct TransDate) as tradingDays" + " from company natural join
-    // pricevolume"
-    // + " where Industry = '" + industry + "' " + " and TransDate >= '" + startDate
-    // + "' and TransDate <= '" + endDate + "' " + " group by Ticker" + " having
-    // tradingDays >= '"
-    // + startDate + "' " + " order by Ticker");
-
-    // // getTickerDatesQuery = "select Ticker, min(TransDate) as StartDate,
-    // max(TransDate) as endDate,"
-    // // + " count(distinct TransDate) as tradingDays" + " from company natural
-    // join pricevolume"
-    // // + " where Industry = ?" + " and TransDate >= ? and TransDate <= ?" + "
-    // group by Ticker"
-    // // + " having tradingDays >= ?" + " order by Ticker";
-
-    // while (getTickerDatesQuery.next()) {
-    // numDays = Integer.parseInt(getTickerDatesQuery.getString("tradingDays"));
-
-    // // This was an attempt to fix how I am getting too many tickers
-    // // The result was it was giving me just a less
-    // // - could this be accounting for the null that the write up talks about
-
-    // String ticker = getTickerDatesQuery.getString("Ticker");
-    // System.out.println(ticker);
-    // tickers.add(ticker);
-    // }
-
-    // return new IndustryData(tickers, startDate, endDate, numDays);
-    // }
 
     static IndustryData processIndustry(String industry) throws SQLException {
         // To Do: Execute the appropriate SQL queries (you need two of them) and return
@@ -338,13 +412,28 @@ class EidemAssignment3 {
         getIndustryPriceData.setString(3, data.endDate);
 
         ResultSet rs = getIndustryPriceData.executeQuery();
-
-
-
+        
+        
+        
         String tickerQuery = "-1";
         String transDateQuery = "-1";
         String openPriceQuery = "-1";
         String closePriceQuery = "-1";
+        
+        ArrayList<StockData> stocks = new ArrayList<StockData>(); 
+
+
+
+
+
+        Boolean firstDay = true;
+        String firstDate = "";
+
+        HashMap<String, Integer> tickerIndexHash = new HashMap<String, Integer>();
+
+        ArrayList<String> tickers = new ArrayList<String>();
+        ArrayList<TickerList> tickersList = new ArrayList<TickerList>();
+
 
         while(rs.next()){
             tickerQuery = rs.getString("Ticker");
@@ -352,12 +441,43 @@ class EidemAssignment3 {
             openPriceQuery = rs.getString("OpenPrice");
             closePriceQuery = rs.getString("ClosePrice");
 
+            if(!tickerIndexHash.containsKey(tickerQuery)){
+
+            }
+
+            if(!tickers.contains(tickerQuery)){
+                tickers.add(tickerQuery);
+
+                tickersList.add(new TickerList());
+                //tickersList.add(tickers);
+            }
+
+            
+            //make a class of this data and make an arraylist to hold that class
+            //consider the flow of dates
+            //System.out.println(industry + "\t" + tickerQuery + " \t" + transDateQuery + "\t" + openPriceQuery + " - " + closePriceQuery);
+            
+            
+            int tickerNumber = tickers.indexOf(tickerQuery);
+            StockData stock = new StockData(tickerQuery, transDateQuery, Double.parseDouble(openPriceQuery), Double.parseDouble(closePriceQuery));
+            
+            tickersList.get(tickerNumber).addStockData(stock);
 
 
 
-            System.out.println(tickerQuery + " \t" + transDateQuery + "\t" + openPriceQuery + " - " + closePriceQuery);
+            //TODO:
+            //Make an arrayList that holds 60 data points at a time 
+
+            //make a class of industry interval
+            //make a list of that class 
+            //have that class have a return that is what I want to put into my database
         }
 
+        IndustryData industryList = new IndustryData(industry, tickersList);
+
+        
+
+       
 
 
         //TODO
@@ -366,23 +486,34 @@ class EidemAssignment3 {
 
             //maybe make an arrraylost
 
-
+            industryList.acountSplits();
 
 
 
 
         //TODO:
         //Ticker Return math
-        /*
-            Ticker return = [(closePrice * (D/openPrice)) -D] / D
-            Ticker return = (closePrice/OpenPrice) - 1
-        */
-
-            //double ticker 
 
 
 
 
+            // ArrayList<TickerList> stockList = industryList.getTickersList();
+
+            // for (int i = 0; i < stocksList.size(); i++) {
+            //     ArrayList<StockData> stocksClass = stocksList.get(i).getTickerList();
+
+
+
+
+
+
+            //     for (int j = 0; j < stocksClass.size(); j++) {
+            //         StockData stock = stocksClasss.get(j);
+            //         System.out.println(industry + "\t" + stock.getTicker() + " \t" + stock.getDate() + "\t"
+            //                 + stock.getOpenPrice() + " - " + stock.getClosePrice());
+
+            //     }
+            // }
 
 
 
